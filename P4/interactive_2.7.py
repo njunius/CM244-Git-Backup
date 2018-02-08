@@ -2,7 +2,7 @@ import sys
 import random
 import pickle
 import traceback
-import tkinter
+import Tkinter
 
 import pathfinder
 import pathfinder_dijkstra_bi
@@ -10,7 +10,7 @@ import pathfinder_a_star
 import pathfinder_dijkstra
 
 if len(sys.argv) != 4:
-  print("usage: %s map.gif map.mesh.pickle subsample_factor" % sys.argv[0])
+  print "usage: %s map.gif map.mesh.pickle subsample_factor" % sys.argv[0]
   sys.exit(-1)
 
 _, MAP_FILENAME, MESH_FILENAME, SUBSAMPLE = sys.argv
@@ -19,14 +19,14 @@ SUBSAMPLE = int(SUBSAMPLE)
 with open(MESH_FILENAME, 'rb') as f:
   mesh = pickle.load(f)
 
-master = tkinter.Tk()
+master = Tkinter.Tk()
 
-big_image = tkinter.PhotoImage(file=MAP_FILENAME)
+big_image = Tkinter.PhotoImage(file=MAP_FILENAME)
 small_image = big_image.subsample(SUBSAMPLE,SUBSAMPLE)
 BIG_WIDTH, BIG_HEIGHT = big_image.width(), big_image.height()
 SMALL_WIDTH, SMALL_HEIGHT = small_image.width(), small_image.height()
 
-canvas = tkinter.Canvas(master, width=SMALL_WIDTH, height=SMALL_HEIGHT)
+canvas = Tkinter.Canvas(master, width=SMALL_WIDTH, height=SMALL_HEIGHT)
 canvas.pack()
 
 def shrink(values):
@@ -39,8 +39,8 @@ path = []
 
 def redraw():
 
-  canvas.delete(tkinter.ALL)
-  canvas.create_image((0,0), anchor=tkinter.NW, image=small_image)
+  canvas.delete(Tkinter.ALL)
+  canvas.create_image((0,0), anchor=Tkinter.NW, image=small_image)
 
   for box in visited_boxes:
     x1,x2,y1,y2 = shrink(box)
@@ -81,10 +81,10 @@ def on_click(event):
 
     try:
       path, visited_boxes = pathfinder.find_path(source_point, destination_point, mesh)
-      #path, visited_boxes = pathfinder_a_star.find_path(source_point, destination_point, mesh) 
-      #path, visited_boxes = pathfinder_dijkstra.find_path(source_point, destination_point, mesh) 
-      #path, visited_boxes = pathfinder_dijkstra_bi.find_path(source_point, destination_point, mesh) 
-      
+      #path, visited_boxes = pathfinder_dijkstra_bi.find_path(source_point, destination_point, mesh)
+      #path, visited_boxes = pathfinder_a_star.find_path(source_point, destination_point, mesh)
+      #path, visited_boxes = pathfinder_dijkstra.find_path(source_point, destination_point, mesh)
+
     except:
       destination_point = None
       traceback.print_exc()

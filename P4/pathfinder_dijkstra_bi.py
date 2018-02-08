@@ -2,7 +2,6 @@
 # Nick Junius
 # (based on code written by Aaron Desin and Nick Junius in 2015)
 
-import Queue
 from math import sqrt
 from heapq import heappush, heappop
 

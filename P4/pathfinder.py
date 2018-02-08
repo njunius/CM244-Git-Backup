@@ -2,7 +2,6 @@
 # Nick Junius
 # (based on code written by Aaron Desin and Nick Junius in 2015)
 
-import Queue
 from math import sqrt
 from heapq import heappush, heappop
 
@@ -107,7 +106,7 @@ def a_star_shortest_path(src_box, src_point, dst_box, dst_point, graph, adj):
     # calculate the path going from inside to the outside
     if current in forward_prev and current in backwards_prev:
         path = []
-        
+                
         # if the source and destination are adjacent
         if current == src_box or current == dst_box:
             path.append((forward_detail_points[current], src_point))
