@@ -14,7 +14,7 @@ bots = {
   'blue': importlib.import_module(blue_module),
 }
 
-rounds = 100
+rounds = 10
 wins = defaultdict(int)
 
 game = Game()

@@ -20,7 +20,7 @@ class Node:
         self.who = last_move
         
     def uct_select_child(self):
-        selected_child_node = sorted(self.child_nodes, key = lambda c: c.reward/c.times_visited + sqrt(2 * log(self.times_visited)/c.times_visited))[-1]
+        selected_child_node = max(self.child_nodes, key = lambda c: c.reward/c.times_visited + sqrt(2 * log(self.times_visited)/c.times_visited))
         return selected_child_node
         
     def add_child(self, m, s, last_move = None):
@@ -32,7 +32,7 @@ class Node:
 def think(state):
             
     rootnode = Node(state = state, last_move = state.get_whose_turn())
-    rootnode.times_visited = 1.0
+    rootnode.times_visited = 0.0
     
     for iterations in range(ITERMAX):
         node = rootnode
@@ -63,5 +63,5 @@ def think(state):
             node.reward += result
             node = node.parent
             
-    return sorted(rootnode.child_nodes, key = lambda c: c.reward/c.times_visited)[-1].move
+    return max(rootnode.child_nodes, key = lambda c: c.reward/c.times_visited).move
     
