@@ -1,0 +1,5 @@
+REQUIRES PYTHON 3.6
+
+USAGE:
+
+py game.py

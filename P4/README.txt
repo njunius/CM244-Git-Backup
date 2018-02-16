@@ -6,8 +6,12 @@ REQUIRES PICKLE FILE BUILT USING THE MESHBUILDER
 
 commandline usage:
 
-python interactive.py [pic_name].gif [pickle_name].pickle [scale factor (6-8 recommended for included dungeon)]
+python interactive_2.7.py [pic_name].gif [pickle_name].pickle [scale factor (6-8 recommended for included dungeon)]
 
 commandline for included files:
 
-python interactive.py dungeon.gif dungeon.png.mesh.pickle 8
+python interactive_2.7.py dungeon.gif dungeon.png.mesh.pickle 8
+
+FOR PYTHON 3.6
+
+py interactive.py dungeon.gif mesh.pickle 8
