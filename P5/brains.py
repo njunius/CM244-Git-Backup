@@ -53,45 +53,39 @@ class SlugBrain:
 
   def set_attacking(self):
     self.body.set_alarm(1)
-    nearest_mantis = self.body.find_nearest('Mantis')
-    if nearest_mantis:
-        self.body.follow(nearest_mantis)
-        self.state = 'attacking'
-    else:
+    self.state = 'attacking'
+    try:
+        self.body.follow(self.body.find_nearest('Mantis'))
+    except ValueError:
         self.body.stop()
-        self.set_alarm(1)
         self.state = 'idle'
-        
+
   def set_harvesting(self):
     self.body.set_alarm(1)
+    self.state = 'harvesting'
     if not self.has_resources:
-        nearest_resource = self.body.find_nearest('Resource')
-        if nearest_resource:
-            self.body.go_to(nearest_resource)
-            self.state = 'harvesting'
-        else:
+        try:
+            self.body.go_to(self.body.find_nearest('Resource'))
+        except ValueError:
             self.body.stop()
             self.state = 'idle'
     else:
-        nearest_nest = self.body.find_nearest('Nest')
-        if nearest_nest:
-            self.body.go_to(nearest_nest)
-            self.state = 'harvesting'
-        else:
+        try:
+            self.body.go_to(self.body.find_nearest('Nest'))
+        except ValueError:
             self.body.stop()
             self.state = 'idle'
             
   def set_building(self):
     self.body.set_alarm(1)
-    nearest_nest = self.body.find_nearest('Nest')
-    if nearest_nest:
-        self.body.go_to(nearest_nest)
-        self.state = 'building'
+    self.state = 'building'
     
-    else:
+    try:
+        self.body.go_to(self.body.find_nearest('Nest'))
+    except ValueError:
         self.body.stop()
         self.state = 'idle'
-    
+
   def handle_event(self, message, details):
     # TODO: IMPLEMENT THIS METHOD
     #  (Use helper methods and classes to keep your code organized where
