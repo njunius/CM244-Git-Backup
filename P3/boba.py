@@ -6,7 +6,7 @@
 import greedo
 import random
 
-ROLLOUTS = 10
+ROLLOUTS = 1
 
 def think(state):
 

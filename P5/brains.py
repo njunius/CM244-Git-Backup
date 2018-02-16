@@ -56,7 +56,8 @@ class SlugBrain:
     self.body.set_alarm(1)
     self.state = 'attacking'
     try:
-        self.body.follow(self.body.find_nearest('Mantis'))
+        self.target = self.body.find_nearest('Mantis')
+        self.body.follow(self.target)
     except ValueError:
         self.body.stop()
         self.state = 'idle'
@@ -66,13 +67,15 @@ class SlugBrain:
     self.state = 'harvesting'
     if not self.has_resources:
         try:
-            self.body.go_to(self.body.find_nearest('Resource'))
+            self.target = self.body.find_nearest('Resource')
+            self.body.go_to(self.target)
         except ValueError:
             self.body.stop()
             self.state = 'idle'
     else:
         try:
-            self.body.go_to(self.body.find_nearest('Nest'))
+            self.target = self.body.find_nearest('Nest')
+            self.body.go_to(self.target)
         except ValueError:
             self.body.stop()
             self.state = 'idle'
@@ -120,18 +123,16 @@ class SlugBrain:
             
         elif self.state == 'attacking':
             self.set_attacking()
-
             
     elif message == 'collide':
+        self.target = details['who']
         if details['what'] == 'Mantis' and self.state == 'attacking':
-            target = details['who']
-            target.amount -= 0.07
+            self.target.amount -= 0.07
         
         elif details['what'] == 'Nest':
-            target = details['who']
             if self.state == 'building':
-                target.amount += self.harvest_amount * 0.01
-                if target.amount >= 1.0:
+                self.target.amount += self.harvest_amount * 0.01
+                if self.target.amount >= 1.0:
                     self.body.stop()
                     self.state = 'idle'
             elif self.state == 'fleeing':
@@ -144,7 +145,6 @@ class SlugBrain:
                 self.set_harvesting()
         
         elif details['what'] == 'Resource' and self.state == 'harvesting' and not self.has_resources:
-            target = details['who']
-            target.amount -= self.harvest_amount
+            self.target.amount -= self.harvest_amount
             self.has_resources = True
             self.set_harvesting()
