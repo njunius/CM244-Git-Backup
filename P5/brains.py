@@ -62,7 +62,7 @@ class SlugBrain:
         self.state = 'idle'
 
   def set_harvesting(self):
-    #self.body.set_alarm(1)
+    self.body.set_alarm(1)
     self.state = 'harvesting'
     if not self.has_resources:
         try:
@@ -101,7 +101,7 @@ class SlugBrain:
         elif type(details) is str:
             if details == 'i':
                 self.body.stop()
-                #self.body.set_alarm(1)
+                self.body.set_alarm(1)
                 self.state = 'idle'
             
             elif details == 'a':
@@ -126,7 +126,6 @@ class SlugBrain:
         if details['what'] == 'Mantis' and self.state == 'attacking':
             target = details['who']
             target.amount -= 0.07
-            self.set_attacking()
         
         elif details['what'] == 'Nest':
             target = details['who']
