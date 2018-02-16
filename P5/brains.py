@@ -49,6 +49,7 @@ class SlugBrain:
     self.body = body
     self.state = 'idle'
     self.has_resources = False
+    self.target = None
     self.harvest_amount = 0.1
 
   def set_attacking(self):
@@ -61,7 +62,7 @@ class SlugBrain:
         self.state = 'idle'
 
   def set_harvesting(self):
-    self.body.set_alarm(1)
+    #self.body.set_alarm(1)
     self.state = 'harvesting'
     if not self.has_resources:
         try:
@@ -100,7 +101,7 @@ class SlugBrain:
         elif type(details) is str:
             if details == 'i':
                 self.body.stop()
-                self.body.set_alarm(1)
+                #self.body.set_alarm(1)
                 self.state = 'idle'
             
             elif details == 'a':
@@ -115,38 +116,36 @@ class SlugBrain:
     elif message == 'timer':
         if self.body.amount < 0.5:
             self.state = 'fleeing'
-            nearest_nest = self.body.find_nearest('Nest')
-            if nearest_nest:
-                self.body.go_to(nearest_nest)
+            self.body.go_to(self.body.find_nearest('Nest'))
             
         elif self.state == 'attacking':
             self.set_attacking()
-    
-        elif self.state == 'harvesting':
-            self.set_harvesting()
-        
-        elif self.state == 'building':
-            self.set_building()
+
             
     elif message == 'collide':
         if details['what'] == 'Mantis' and self.state == 'attacking':
             target = details['who']
             target.amount -= 0.07
+            self.set_attacking()
         
         elif details['what'] == 'Nest':
             target = details['who']
             if self.state == 'building':
                 target.amount += self.harvest_amount * 0.01
                 if target.amount >= 1.0:
+                    self.body.stop()
                     self.state = 'idle'
             elif self.state == 'fleeing':
                 self.body.amount += 0.05
                 if self.body.amount >= 1.0:
+                    self.body.stop()
                     self.state = 'idle'
             elif self.state == 'harvesting' and self.has_resources:
                 self.has_resources = False
+                self.set_harvesting()
         
         elif details['what'] == 'Resource' and self.state == 'harvesting' and not self.has_resources:
             target = details['who']
             target.amount -= self.harvest_amount
             self.has_resources = True
+            self.set_harvesting()
