@@ -73,20 +73,18 @@ class SlugBrain:
   def set_harvesting(self):
     self.body.set_alarm(1)
     self.state = 'harvesting'
-    if not self.has_resources:
-        try:
+    try: 
+        if not self.has_resources:
             self.target = self.body.find_nearest('Resource')
-            self.body.go_to(self.target)
-        except ValueError:
-            self.body.stop()
-            self.state = 'idle'
-    else:
-        try:
+        
+        else:
             self.target = self.body.find_nearest('Nest')
-            self.body.go_to(self.target)
-        except ValueError:
-            self.body.stop()
-            self.state = 'idle'
+        
+        self.body.go_to(self.target)
+    
+    except ValueError:
+        self.body.stop()
+        self.state = 'idle'
             
   def set_building(self):
     self.state = 'building'
