@@ -45,19 +45,24 @@ class MantisBrain:
 class SlugBrain:
 
   def __init__(self, body):
-    # TODO: IMPLEMENT THIS METHOD
     self.body = body
     self.state = 'idle'
     self.has_resources = False
-    self.target = None
     self.harvest_amount = 0.1
 
+  def set_fleeing(self):
+    self.state = 'fleeing'
+    try:
+        self.body.go_to(self.body.find_nearest('Nest'))
+    except ValueError:
+        self.body.stop()
+        self.state = 'idle'
+        
   def set_attacking(self):
     self.body.set_alarm(1)
     self.state = 'attacking'
     try:
-        self.target = self.body.find_nearest('Mantis')
-        self.body.follow(self.target)
+        self.body.follow(self.body.find_nearest('Mantis'))
     except ValueError:
         self.body.stop()
         self.state = 'idle'
@@ -67,21 +72,18 @@ class SlugBrain:
     self.state = 'harvesting'
     if not self.has_resources:
         try:
-            self.target = self.body.find_nearest('Resource')
-            self.body.go_to(self.target)
+            self.body.go_to(self.body.find_nearest('Resource'))
         except ValueError:
             self.body.stop()
             self.state = 'idle'
     else:
         try:
-            self.target = self.body.find_nearest('Nest')
-            self.body.go_to(self.target)
+            self.body.go_to(self.body.find_nearest('Nest'))
         except ValueError:
             self.body.stop()
             self.state = 'idle'
             
   def set_building(self):
-    self.body.set_alarm(1)
     self.state = 'building'
     
     try:
@@ -90,11 +92,7 @@ class SlugBrain:
         self.body.stop()
         self.state = 'idle'
 
-  def handle_event(self, message, details):
-    # TODO: IMPLEMENT THIS METHOD
-    #  (Use helper methods and classes to keep your code organized where
-    #  approprioate.)
-    
+  def handle_event(self, message, details):   
     if message == 'order':
         if type(details) is tuple:
             self.body.go_to(details)
@@ -116,35 +114,35 @@ class SlugBrain:
             elif details == 'b':
                 self.set_building()
                 
-    elif message == 'timer':
-        if self.body.amount < 0.5:
-            self.state = 'fleeing'
-            self.body.go_to(self.body.find_nearest('Nest'))
-            
-        elif self.state == 'attacking':
+    elif message == 'timer':    
+        if self.state == 'attacking':
             self.set_attacking()
             
+        elif self.state == 'harvesting':
+            self.set_harvesting()
+            
     elif message == 'collide':
-        self.target = details['who']
-        if details['what'] == 'Mantis' and self.state == 'attacking':
-            self.target.amount -= 0.07
+        target = details['who']
+        if self.body.amount < 0.5 and self.state is not 'fleeing':
+            self.set_fleeing()
+        
+        elif details['what'] == 'Mantis' and self.state == 'attacking':
+            target.amount -= 0.07
         
         elif details['what'] == 'Nest':
             if self.state == 'building':
-                self.target.amount += self.harvest_amount * 0.01
-                if self.target.amount >= 1.0:
-                    self.body.stop()
+                target.amount += self.harvest_amount * 0.01
+                if target.amount >= 1.0:
                     self.state = 'idle'
             elif self.state == 'fleeing':
                 self.body.amount += 0.05
                 if self.body.amount >= 1.0:
-                    self.body.stop()
                     self.state = 'idle'
             elif self.state == 'harvesting' and self.has_resources:
                 self.has_resources = False
                 self.set_harvesting()
         
         elif details['what'] == 'Resource' and self.state == 'harvesting' and not self.has_resources:
-            self.target.amount -= self.harvest_amount
+            target.amount -= self.harvest_amount
             self.has_resources = True
             self.set_harvesting()
