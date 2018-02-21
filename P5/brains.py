@@ -47,13 +47,15 @@ class SlugBrain:
   def __init__(self, body):
     self.body = body
     self.state = 'idle'
+    self.target = None
     self.has_resources = False
     self.harvest_amount = 0.1
 
   def set_fleeing(self):
     self.state = 'fleeing'
     try:
-        self.body.go_to(self.body.find_nearest('Nest'))
+        self.target = self.body.find_nearest('Nest')
+        self.body.go_to(self.target)
     except ValueError:
         self.body.stop()
         self.state = 'idle'
@@ -62,7 +64,8 @@ class SlugBrain:
     self.body.set_alarm(1)
     self.state = 'attacking'
     try:
-        self.body.follow(self.body.find_nearest('Mantis'))
+        self.target = self.body.find_nearest('Mantis')
+        self.body.follow(self.target)
     except ValueError:
         self.body.stop()
         self.state = 'idle'
@@ -72,13 +75,15 @@ class SlugBrain:
     self.state = 'harvesting'
     if not self.has_resources:
         try:
-            self.body.go_to(self.body.find_nearest('Resource'))
+            self.target = self.body.find_nearest('Resource')
+            self.body.go_to(self.target)
         except ValueError:
             self.body.stop()
             self.state = 'idle'
     else:
         try:
-            self.body.go_to(self.body.find_nearest('Nest'))
+            self.target = self.body.find_nearest('Nest')
+            self.body.go_to(self.target)
         except ValueError:
             self.body.stop()
             self.state = 'idle'
@@ -87,7 +92,8 @@ class SlugBrain:
     self.state = 'building'
     
     try:
-        self.body.go_to(self.body.find_nearest('Nest'))
+        self.target = self.body.find_nearest('Nest')
+        self.body.go_to(self.target)
     except ValueError:
         self.body.stop()
         self.state = 'idle'
@@ -122,17 +128,17 @@ class SlugBrain:
             self.set_harvesting()
             
     elif message == 'collide':
-        target = details['who']
+        self.target = details['who']
         if self.body.amount < 0.5 and self.state is not 'fleeing':
             self.set_fleeing()
         
         elif details['what'] == 'Mantis' and self.state == 'attacking':
-            target.amount -= 0.07
+            self.target.amount -= 0.07
         
         elif details['what'] == 'Nest':
             if self.state == 'building':
-                target.amount += self.harvest_amount * 0.01
-                if target.amount >= 1.0:
+                self.target.amount += self.harvest_amount * 0.01
+                if self.target.amount >= 1.0:
                     self.state = 'idle'
             elif self.state == 'fleeing':
                 self.body.amount += 0.05
@@ -143,6 +149,6 @@ class SlugBrain:
                 self.set_harvesting()
         
         elif details['what'] == 'Resource' and self.state == 'harvesting' and not self.has_resources:
-            target.amount -= self.harvest_amount
+            self.target.amount -= self.harvest_amount
             self.has_resources = True
             self.set_harvesting()
