@@ -51,47 +51,20 @@ class SlugBrain:
     self.has_resources = False
     self.harvest_amount = 0.1
 
-  def set_fleeing(self):
-    self.state = 'fleeing'
-    try:
-        self.target = self.body.find_nearest('Nest')
-        self.body.go_to(self.target)
-    except ValueError:
-        self.body.stop()
-        self.state = 'idle'
-        
-  def set_attacking(self):
+  # state is a string
+  # target can be either a string or an (x,y) tuple
+  def set_state(self, state, target):
+    self.state = state
     self.body.set_alarm(1)
-    self.state = 'attacking'
     try:
-        self.target = self.body.find_nearest('Mantis')
-        self.body.follow(self.target)
-    except ValueError:
-        self.body.stop()
-        self.state = 'idle'
-
-  def set_harvesting(self):
-    self.body.set_alarm(1)
-    self.state = 'harvesting'
-    try: 
-        if not self.has_resources:
-            self.target = self.body.find_nearest('Resource')
-        
+        if state == 'moving':
+            self.target = target
+            self.body.go_to(self.target)
+        elif state == 'idle':
+            self.body.stop()
         else:
-            self.target = self.body.find_nearest('Nest')
-        
-        self.body.go_to(self.target)
-    
-    except ValueError:
-        self.body.stop()
-        self.state = 'idle'
-            
-  def set_building(self):
-    self.state = 'building'
-    
-    try:
-        self.target = self.body.find_nearest('Nest')
-        self.body.go_to(self.target)
+            self.target = self.body.find_nearest(target)
+            self.body.follow(self.target)
     except ValueError:
         self.body.stop()
         self.state = 'idle'
@@ -99,36 +72,41 @@ class SlugBrain:
   def handle_event(self, message, details):   
     if message == 'order':
         if type(details) is tuple:
-            self.body.go_to(details)
-            self.body.set_alarm(1)
-            self.state = 'moving'
+            self.set_state('moving', details)
         
         elif type(details) is str:
             if details == 'i':
-                self.body.stop()
-                self.body.set_alarm(1)
-                self.state = 'idle'
+                self.set_state('idle', None)
             
             elif details == 'a':
-                self.set_attacking()
+                self.set_state('attacking', 'Mantis')
                 
             elif details == 'h':
-                self.set_harvesting()
+                if self.has_resources:
+                    self.set_state('harvesting', 'Nest')
+                else:
+                    self.set_state('harvesting', 'Resource')
           
             elif details == 'b':
-                self.set_building()
+                self.set_state('building', 'Nest')
                 
     elif message == 'timer':    
         if self.state == 'attacking':
-            self.set_attacking()
-            
+            self.set_state('attacking', 'Mantis')
+        
+        elif self.state == 'moving':
+            self.set_state('moving', self.target)
+        
         elif self.state == 'harvesting':
-            self.set_harvesting()
+            if self.has_resources:
+                self.set_state('harvesting', 'Nest')
+            else:
+                self.set_state('harvesting', 'Resource')
             
     elif message == 'collide':
         self.target = details['who']
         if self.body.amount < 0.5 and self.state is not 'fleeing':
-            self.set_fleeing()
+            self.set_state('fleeing', 'Nest')
         
         elif details['what'] == 'Mantis' and self.state == 'attacking':
             self.target.amount -= 0.07
@@ -144,9 +122,9 @@ class SlugBrain:
                     self.state = 'idle'
             elif self.state == 'harvesting' and self.has_resources:
                 self.has_resources = False
-                self.set_harvesting()
+                self.set_state('harvesting', 'Resource')
         
         elif details['what'] == 'Resource' and self.state == 'harvesting' and not self.has_resources:
             self.target.amount -= self.harvest_amount
             self.has_resources = True
-            self.set_harvesting()
+            self.set_state('harvesting', 'Nest')
