@@ -1,0 +1,16 @@
+E E E E E E E E E E E E E E E E E E
+E A A A E F F F E W W W A A A A A E
+E A A A E F F F E W W W A A A A A E
+E A A A E F F F E W W W E A A A A E
+E A A A E F F F E W W W E A A A A E
+E A A A E F F F E W W W E A A A A E
+E A A A A F F F E W W F E A A A A E
+E A A A 3 F F F E W F W E A A A A E
+E A A A E F F F E W F W E A A A A E
+E A A A E F F 1 E F W W E A A A A E
+E A A A E F F E E W W W E A A A 5 E
+E A A A E F F F E W W W E E E E E E
+E A A A E E F F E W W W W W W W 2 E
+E A A A E F F F F W W W W W W W E E
+E 0 A 4 E F F F F W W W W W W E E E
+E E E E E E E E E E E E E E E E E E
