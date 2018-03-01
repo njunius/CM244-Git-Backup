@@ -82,10 +82,7 @@ class SlugBrain:
                 self.set_state('attacking', 'Mantis')
                 
             elif details == 'h':
-                if self.has_resources:
-                    self.set_state('harvesting', 'Nest')
-                else:
-                    self.set_state('harvesting', 'Resource')
+                self.set_state('harvesting', 'Nest' if self.has_resources else 'Resource')
           
             elif details == 'b':
                 self.set_state('building', 'Nest')
@@ -98,10 +95,7 @@ class SlugBrain:
             self.set_state('moving', self.target)
         
         elif self.state == 'harvesting':
-            if self.has_resources:
-                self.set_state('harvesting', 'Nest')
-            else:
-                self.set_state('harvesting', 'Resource')
+            self.set_state('harvesting', 'Nest' if self.has_resources else 'Resource')
             
     elif message == 'collide':
         self.target = details['who']

@@ -13,19 +13,19 @@ def analyze(design):
     queue = [init]
     
     # dict where keys are states and values are states
-    results = {}
-    results[init] = None
+    prev = {}
+    prev[init] = None
     
     while queue:
         # state are a tuple of pos, abilities 
         current_state = queue.pop(0)
         for move in moves:
             next_state = sim.get_next_state(current_state, move)
-            if next_state != None and next_state not in results:
+            if next_state != None and next_state not in prev:
                 queue.append(next_state)
-                results[next_state] = current_state        
+                prev[next_state] = current_state        
     
-    return results
+    return prev
     
 def inspect(results, pos, draw_line):
     current_state = None
