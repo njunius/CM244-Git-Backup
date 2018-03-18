@@ -38,8 +38,9 @@ def inspect(results, pos, draw_line):
             #prev_coordinates, prev_abilities = results[current_state]
             
             while prev_state != None:
-                draw_line(current_state[0], prev_state[0], state, prev_state[1])
+                prev_coordinates, prev_abilities = prev_state
+                draw_line(current_coordinates, prev_coordinates, state, prev_abilities)
                 current_state = prev_state
-                #current_coordinates, current_abilities = current_state
+                current_coordinates, current_abilities = current_state
                 prev_state = results[current_state]
-                #prev_coordinates, prev_abilities = prev_state
+                
