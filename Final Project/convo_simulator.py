@@ -10,11 +10,11 @@ _, red_module, blue_module = sys.argv
 
 
 bots = {
-  'Olivia': importlib.import_module(red_module),
-  'Viola': importlib.import_module(blue_module),
+  'Morgan': importlib.import_module(red_module),
+  'Jules': importlib.import_module(blue_module),
 }
 
-rounds = 10
+rounds = 1
 wins = defaultdict(int)
 
 game = Conversation(sorted(bots.keys())[1], sorted(bots.keys())[0])
@@ -30,12 +30,12 @@ for i in range(rounds):
     tick = time.time()
     move = bots[state.whose_turn].think(state.copy())
     tock = time.time()
-    print(state.whose_turn, "thought for", tock-tick, "seconds")
+    #print(state.whose_turn, "thought for", tock-tick, "seconds")
     state.apply_move(move)
 
   winner = max(game.agents,key=state.get_score)
-  print("%s wins this round!" % winner)
+  print("%s got what they wanted" % winner)
   wins[winner] = 1 + wins[winner]
 
 print("")
-print("Final win counts:", dict(wins))
+print("Everyone's successes:", dict(wins))

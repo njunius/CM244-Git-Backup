@@ -1,5 +1,5 @@
 import random
-import copy
+
 class Conversation(object):
     
     def __init__(self, char1, char2):
@@ -10,7 +10,7 @@ class Conversation(object):
                         'Persuasion': 'persuade',
                         'Insight': 'make an insightful comment to',
                         'Manipulate': 'manipulate',
-                        'Cultural Knowledge': 'talk about history with',
+                        'Cultural Knowledge': '',
                         'Intimidate': 'intimidate',
                         'Sleight of Hand': 'impress'
                       }
@@ -47,9 +47,14 @@ class State(object):
         self.other_final_roll = 0
         self.move_made = ""
         self.conversation_partner = game.agents[1]
-        self.agent_success = {agent: 0 for agent in self.game.agents}
-        self.agent_failure = {agent: 0 for agent in self.game.agents}
-        self.agent_used_skills = {agent: {} for agent in self.game.agents}
+        self.agent_1_successes = 0
+        self.agent_2_successes = 0
+        self.agent_1_failures = 0
+        self.agent_2_failures = 0
+        
+        # dicts where keys are strings corresponding to skill names and values are number of times used
+        self.agent_1_used_skills = {}
+        self.agent_2_used_skills = {}
                                    
     def copy(self):
         res = State(self.game)
@@ -58,54 +63,55 @@ class State(object):
         res.other_final_roll = self.other_final_roll
         res.move_made = self.move_made
         res.conversation_partner = self.conversation_partner
-        res.agent_success = copy.deepcopy(self.agent_success)
-        res.agent_failure = copy.deepcopy(self.agent_failure)
-        res.agent_used_skills = copy.deepcopy(self.agent_used_skills)
-        #print('successes ', res.agent_success)
-        #print('failures ', res.agent_failure)
+        res.agent_1_successes = self.agent_1_successes
+        res.agent_2_successes = self.agent_2_successes
+        res.agent_1_failures = self.agent_1_failures
+        res.agent_2_failures = self.agent_2_failures
+        res.agent_1_used_skills = self.agent_1_used_skills.copy()
+        res.agent_2_used_skills = self.agent_2_used_skills.copy()
+
         return res
         
     def get_whose_turn(self):
         return self.whose_turn
         
-    def get_successes(self, agent):
-        return self.agent_success[agent]
-        
-    def get_failures(self, agent):
-        return self.agent_failure[agent]
-       
     def get_moves(self):
-        return [skill for skill in self.game.skills.keys() if skill not in self.agent_used_skills[self.whose_turn]]
+        if self.whose_turn == self.game.agents[0]:
+            return [skill for skill in self.game.skills.keys() if skill not in self.agent_1_used_skills]
+        else:
+            return [skill for skill in self.game.skills.keys() if skill not in self.agent_2_used_skills]
         
     def apply_move(self, move):
         my_roll = random.randint(1, 20)
         other_roll = random.randint(1, 20)
-        #if move == 'Apologize':
-        #    for skill in self.game.skills.keys():
-        #        if skill not in self.agent_used_skills[self.whose_turn] and skill != 'Apologize':
-        #            self.agent_failure[self.whose_turn] -= 1
-        #            self.agent_used_skills[self.whose_turn][skill] = 1
-        #            break
-                    
-        #    self.agent_used_skills[self.whose_turn][move] = 1
-        #else:
-        self.my_final_roll = my_roll + self.game.agent_1_skills[move]
-        self.other_final_roll = other_roll + self.game.agent_2_skills[move]
-        self.agent_used_skills[self.whose_turn][move] = 1
-        if self.my_final_roll >= self.other_final_roll:
-            self.agent_success[self.whose_turn] += 1
+        if self.whose_turn == self.game.agents[0]:
+            self.my_final_roll = my_roll + self.game.agent_1_skills[move]
+            self.other_final_roll = other_roll + self.game.agent_2_skills[move]
+            self.agent_1_used_skills[move] = 1
+            if self.my_final_roll >= self.other_final_roll:
+                self.agent_1_successes += 1
+            else:
+                self.agent_1_failures += 1
         else:
-            self.agent_failure[self.whose_turn] += 1
-
+            self.my_final_roll = my_roll + self.game.agent_2_skills[move]
+            self.other_final_roll = other_roll + self.game.agent_1_skills[move]
+            self.agent_2_used_skills[move] = 1
+            if self.my_final_roll >= self.other_final_roll:
+                self.agent_2_successes += 1
+            else:
+                self.agent_2_failures += 1
+                
         self.move_made = self.game.skills[move]
-
         self.whose_turn = self.game.agents[(self.game.agents.index(self.whose_turn)+1) % len(self.game.agents)]
-        self.conversation_partner = self.game.agents[(self.game.agents.index(self.conversation_partner)+1) % len(self.game.agents)]
+        self.conversation_partner = self.game.agents[(self.game.agents.index(self.whose_turn)+1) % len(self.game.agents)]
         
         return self
     
     def is_terminal(self):
-        return self.agent_failure[self.game.agents[0]] > 2 or self.agent_success[self.game.agents[0]] > 2 or self.agent_failure[self.game.agents[1]] > 2 or self.agent_success[self.game.agents[1]] > 2
+        return self.agent_1_failures > 2 or self.agent_1_successes > 2 or self.agent_2_failures > 2 or self.agent_2_successes > 2
         
     def get_score(self, agent):
-        return self.agent_success[agent] - self.agent_failure[agent]
+        if agent == self.game.agents[0]:
+            return self.agent_1_successes - self.agent_1_failures
+        else:
+            return self.agent_2_successes - self.agent_2_failures

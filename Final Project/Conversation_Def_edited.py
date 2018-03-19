@@ -10,7 +10,7 @@ class Conversation(object):
                         'Persuasion': 'persuade',
                         'Insight': 'make an insightful comment to',
                         'Manipulate': 'manipulate',
-                        'Cultural Knowledge': 'talk about history with',
+                        'Cultural Knowledge': '',
                         'Intimidate': 'intimidate',
                         'Sleight of Hand': 'impress'
                       }
@@ -61,34 +61,18 @@ class State(object):
         res.agent_success = copy.deepcopy(self.agent_success)
         res.agent_failure = copy.deepcopy(self.agent_failure)
         res.agent_used_skills = copy.deepcopy(self.agent_used_skills)
-        #print('successes ', res.agent_success)
-        #print('failures ', res.agent_failure)
         return res
         
     def get_whose_turn(self):
         return self.whose_turn
         
-    def get_successes(self, agent):
-        return self.agent_success[agent]
-        
-    def get_failures(self, agent):
-        return self.agent_failure[agent]
-       
     def get_moves(self):
         return [skill for skill in self.game.skills.keys() if skill not in self.agent_used_skills[self.whose_turn]]
         
     def apply_move(self, move):
         my_roll = random.randint(1, 20)
         other_roll = random.randint(1, 20)
-        #if move == 'Apologize':
-        #    for skill in self.game.skills.keys():
-        #        if skill not in self.agent_used_skills[self.whose_turn] and skill != 'Apologize':
-        #            self.agent_failure[self.whose_turn] -= 1
-        #            self.agent_used_skills[self.whose_turn][skill] = 1
-        #            break
-                    
-        #    self.agent_used_skills[self.whose_turn][move] = 1
-        #else:
+        
         self.my_final_roll = my_roll + self.game.agent_1_skills[move]
         self.other_final_roll = other_roll + self.game.agent_2_skills[move]
         self.agent_used_skills[self.whose_turn][move] = 1
@@ -98,14 +82,13 @@ class State(object):
             self.agent_failure[self.whose_turn] += 1
 
         self.move_made = self.game.skills[move]
-
         self.whose_turn = self.game.agents[(self.game.agents.index(self.whose_turn)+1) % len(self.game.agents)]
-        self.conversation_partner = self.game.agents[(self.game.agents.index(self.conversation_partner)+1) % len(self.game.agents)]
+        self.conversation_partner = self.game.agents[(self.game.agents.index(self.whose_turn)+1) % len(self.game.agents)]
         
         return self
     
     def is_terminal(self):
-        return self.agent_failure[self.game.agents[0]] > 2 or self.agent_success[self.game.agents[0]] > 2 or self.agent_failure[self.game.agents[1]] > 2 or self.agent_success[self.game.agents[1]] > 2
+        return self.agent_failure[self.whose_turn] > 2 or self.agent_success[self.whose_turn] > 2 or self.agent_failure[self.conversation_partner] > 2 or self.agent_success[self.conversation_partner] > 2
         
     def get_score(self, agent):
         return self.agent_success[agent] - self.agent_failure[agent]

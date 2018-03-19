@@ -70,5 +70,17 @@ def think(state):
                                                                         chosen_node.state.conversation_partner,
                                                                         chosen_node.state.my_final_roll, 
                                                                         chosen_node.state.other_final_roll))
+                                                                        
+    if chosen_node.state.my_final_roll >= chosen_node.state.other_final_roll:
+        print('{0} thinks more highly of {1}'.format(chosen_node.state.conversation_partner, chosen_node.who))
+    else:
+        print('{0} thinks {1} is making a fool of themselves'.format(chosen_node.state.conversation_partner, chosen_node.who))
+        
+    print('{0} has {1} successful and {2} failed moves so far. {3} has {4} successful and {5} failed moves so far.\n'.format(chosen_node.who,
+                                                                                                                                         chosen_node.state.get_successes(chosen_node.who),
+                                                                                                                                         chosen_node.state.get_failures(chosen_node.who),
+                                                                                                                                         chosen_node.state.conversation_partner,
+                                                                                                                                         chosen_node.state.get_successes(chosen_node.state.conversation_partner),
+                                                                                                                                         chosen_node.state.get_failures(chosen_node.state.conversation_partner)))
     return chosen_node.move
     

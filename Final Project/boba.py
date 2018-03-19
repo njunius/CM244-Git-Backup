@@ -39,5 +39,5 @@ def think(state):
             best_expectation = expectation
             best_move = move
             
-    print("Autobots rollout with move {}".format(best_move))
+    print("{} rollouts with move {}".format(me, best_move))
     return best_move
