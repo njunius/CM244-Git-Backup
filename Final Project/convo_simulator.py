@@ -33,9 +33,23 @@ for i in range(rounds):
     print(state.get_whose_turn(), "thought for", tock-tick, "seconds")
     state.apply_move(move)
 
-  winner = max(game.agents,key=state.get_score)
-  print("%s got what they wanted" % winner)
-  wins[winner] = 1 + wins[winner]
+  print('')
+  print(state.action_log)
+  prev_entry = state.action_log[0]
+  for entry in state.action_log:
+    print('\n{} tried to {} {}'.format(state.game.agents[entry[0]], state.game.skills[entry[1]], state.game.agents[1 - entry[0]]))
+    
+    if state.action_log.index(entry) > 1:
+        prev_entry = state.action_log[state.action_log.index(entry) - 2]
+        
+    if (entry[2] > 0 and prev_entry == entry) or entry[2] > prev_entry[2]:
+        print('{} thinks more highly of {}'.format(state.game.agents[1 - entry[0]], state.game.agents[entry[0]]))
+    else:
+        print('{} thinks {} is making a fool of themselves'.format(state.game.agents[1 - entry[0]], state.game.agents[entry[0]]))
+    prev_entry = entry
+  
+  print('\n{} got what they wanted'.format(state.game.agents[prev_entry[0]]))
+
 
 print("")
-print("Everyone's successes:", dict(wins))
+

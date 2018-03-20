@@ -13,7 +13,9 @@ class Conversation(object):
                         'Cultural Knowledge': 'talk about history with',
                         'Intimidate': 'intimidate',
                         'Sleight of Hand': 'impress',
-                        'Apologize': 'apologizes to'
+                        'Apologize': 'apologize to',
+                        'Bluff': 'take over the conversation from',
+                        'Barter': 'promise a favor to'
                       }
                       
         self.agent_skills = [
@@ -49,7 +51,7 @@ class State(object):
         self.game = game
         self.whose_turn = 0
         
-        self.action_log = [] # tuple of (who, skill, successes, failures)
+        self.action_log = [] # tuple of (who, skill, successes, failures, apoligized_skill, bluffed_skill, bartered_skill, bluff_modifier, barter_modifier)
         
     def copy(self):
         res = State(self.game)
@@ -66,52 +68,79 @@ class State(object):
             for entry in self.action_log:
                 if entry[0] == self.whose_turn and entry[1] in moves:
                     moves.remove(entry[1])
+                elif entry[0] == self.whose_turn and entry[4] in moves:
+                    moves.remove(entry[4])
+                elif entry[0] == self.whose_turn and entry[5] in moves:
+                    moves.remove(entry[5])
+                elif entry[0] == self.whose_turn and entry[6] in moves:
+                    moves.remove(entry[6])
                 
         return moves
         
     def apply_move(self, move):
         num_successes = 0
         num_failures = 0
-        if len(self.action_log) > 1:
-            num_successes = self.action_log[-1][2]
-            num_failures = self.action_log[-1][3]
+        bluff_mod = 0
+        barter_mod = 0
+        apoligized_skill = ''
+        bluffed_skill = ''
+        bartered_skill = ''
+        available_moves = self.get_moves()
 
-        if move == 'Apologize':
-            available_moves = self.get_moves()
+        if len(self.action_log) > 1:
+            num_successes = self.action_log[-2][2]
+            num_failures = self.action_log[-2][3]
+            bluff_mod = self.action_log[-2][7]
+            barter_mod = self.action_log[-2][8]
+            apoligized_skill = self.action_log[-2][4]
+            bluffed_skill = self.action_log[-2][5]
+            bartered_skill = self.action_log[-2][6]
+
+        if (move == 'Apologize' or move == 'Bluff' or move == 'Barter') and len(available_moves) > 0:
+            worst_option = available_moves[0]
             for skill in available_moves:
-                if skill != 'Apologize':
-                    num_failures -= 1
-                    apology_action = (self.whose_turn, move, num_successes, num_failures)
-                    self.action_log.append(apology_action)
-                    used_skill = (self.whose_turn, skill, num_successes, num_failures)
-                    self.action_log.append(used_skill)
+                if skill in self.game.agent_skills[self.whose_turn]:
+                    if self.game.agent_skills[self.whose_turn][skill] < self.game.agent_skills[self.whose_turn][worst_option]:
+                        worst_option = skill
+            if move == 'Apologize':
+                num_failures -= 1
+                apoligized_skill = worst_option
+            elif move == 'Bluff':
+                bluff_mod = -2
+                bluffed_skill = worst_option
+            else:
+                barter_mod = -2
+                bartered_skill = worst_option
+            next_action = (self.whose_turn, move, num_successes, num_failures, apoligized_skill, bluffed_skill, bartered_skill, bluff_mod, barter_mod)
+            self.action_log.append(next_action)
+            
         
         else:
-            my_final_roll = self.game.agent_skills[self.whose_turn][move]
-            other_final_roll = self.game.agent_skills[1-self.whose_turn][move]
+            my_final_roll = self.game.agent_skills[self.whose_turn][move] 
+            other_final_roll = self.game.agent_skills[1-self.whose_turn][move] + bluff_mod + barter_mod
             if my_final_roll >= other_final_roll:
                 num_successes += 1
             else:
                 num_failures += 1
-            next_action = (self.whose_turn, move, num_successes, num_failures)
+            next_action = (self.whose_turn, move, num_successes, num_failures, apoligized_skill, bluffed_skill, bartered_skill, bluff_mod, barter_mod)
             self.action_log.append(next_action)
         
         self.whose_turn = 1 - self.whose_turn
         
-        print(self.action_log)
+        #print(self.action_log)
         return self
     
     def is_terminal(self):
         num_actions = len(self.action_log)
         if len(self.action_log) < 2:
             return False
-        for who, skill, successes, failures in self.action_log:
+        for who, skill, successes, failures, apology, bluffed, bartered, bluff_mod, barter_mod in self.action_log:
             if successes > 2 or failures > 2:
                 return True
         return False
         
     def get_score(self, agent):
-        for who, skill, successes, failures in reversed(self.action_log):
+        for who, skill, successes, failures, apology, bluffed, bartered, bluff_mod, barter_mod in reversed(self.action_log):
             if self.game.agents[self.whose_turn] == agent:
                 return successes - failures
         return 0
