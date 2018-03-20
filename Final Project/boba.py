@@ -39,5 +39,5 @@ def think(state):
             best_expectation = expectation
             best_move = move
             
-    print("{} rollouts with move {}".format(me, best_move))
+    print("{} rollsout with move {} with expected score {}".format(me, best_move, best_expectation))
     return best_move

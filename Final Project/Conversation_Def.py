@@ -12,100 +12,106 @@ class Conversation(object):
                         'Manipulate': 'manipulate',
                         'Cultural Knowledge': 'talk about history with',
                         'Intimidate': 'intimidate',
-                        'Sleight of Hand': 'impress'
+                        'Sleight of Hand': 'impress',
+                        'Apologize': 'apologizes to'
                       }
-        self.agent_1_skills = {
-                                'Deception': 2,
-                                'Performance': 2,
-                                'Persuasion': 1,
-                                'Insight': 0,
-                                'Manipulate': 0,
-                                'Cultural Knowledge': 1,
-                                'Intimidate': 0,
-                                'Sleight of Hand': -1
-                              }
-                         
-        self.agent_2_skills = {
-                                'Deception': 0,
-                                'Performance': 2,
-                                'Persuasion': 0,
-                                'Insight': 3,
-                                'Manipulate': 0,
-                                'Cultural Knowledge': 2,
-                                'Intimidate': -2,
-                                'Sleight of Hand': 0
-                              }
-                         
+                      
+        self.agent_skills = [
+                                {
+                                    'Deception': 2,
+                                    'Performance': 2,
+                                    'Persuasion': 1,
+                                    'Insight': 0,
+                                    'Manipulate': 0,
+                                    'Cultural Knowledge': 1,
+                                    'Intimidate': 0,
+                                    'Sleight of Hand': -1
+                                },
+                                
+                                {
+                                    'Deception': 0,
+                                    'Performance': 2,
+                                    'Persuasion': 0,
+                                    'Insight': 3,
+                                    'Manipulate': 0,
+                                    'Cultural Knowledge': 2,
+                                    'Intimidate': -2,
+                                    'Sleight of Hand': 0
+                                }
+                                
+                            ]
+                            
     def make_initial_state(self):
         return(State(self))
         
 class State(object):
     def __init__(self, game):
         self.game = game
-        self.whose_turn = game.agents[0]
-        self.my_final_roll = 0
-        self.other_final_roll = 0
-        self.move_made = ""
-        self.conversation_partner = game.agents[1]
-        self.agent_success = {agent: 0 for agent in self.game.agents}
-        self.agent_failure = {agent: 0 for agent in self.game.agents}
-        self.agent_used_skills = {agent: {} for agent in self.game.agents}
-                                   
+        self.whose_turn = 0
+        
+        self.action_log = [] # tuple of (who, skill, successes, failures)
+        
     def copy(self):
         res = State(self.game)
         res.whose_turn = self.whose_turn
-        res.my_final_roll = self.my_final_roll
-        res.other_final_roll = self.other_final_roll
-        res.move_made = self.move_made
-        res.conversation_partner = self.conversation_partner
-        res.agent_success = copy.deepcopy(self.agent_success)
-        res.agent_failure = copy.deepcopy(self.agent_failure)
-        res.agent_used_skills = copy.deepcopy(self.agent_used_skills)
-        #print('successes ', res.agent_success)
-        #print('failures ', res.agent_failure)
+        res.action_log = self.action_log.copy()
         return res
         
     def get_whose_turn(self):
-        return self.whose_turn
-        
-    def get_successes(self, agent):
-        return self.agent_success[agent]
-        
-    def get_failures(self, agent):
-        return self.agent_failure[agent]
-       
+        return self.game.agents[self.whose_turn]
+           
     def get_moves(self):
-        return [skill for skill in self.game.skills.keys() if skill not in self.agent_used_skills[self.whose_turn]]
+        moves = list(self.game.skills.keys()).copy()
+        for skill in self.game.skills.keys():
+            for entry in self.action_log:
+                if entry[0] == self.whose_turn and entry[1] in moves:
+                    moves.remove(entry[1])
+                
+        return moves
         
     def apply_move(self, move):
-        my_roll = random.randint(1, 20)
-        other_roll = random.randint(1, 20)
-        #if move == 'Apologize':
-        #    for skill in self.game.skills.keys():
-        #        if skill not in self.agent_used_skills[self.whose_turn] and skill != 'Apologize':
-        #            self.agent_failure[self.whose_turn] -= 1
-        #            self.agent_used_skills[self.whose_turn][skill] = 1
-        #            break
-                    
-        #    self.agent_used_skills[self.whose_turn][move] = 1
-        #else:
-        self.my_final_roll = my_roll + self.game.agent_1_skills[move]
-        self.other_final_roll = other_roll + self.game.agent_2_skills[move]
-        self.agent_used_skills[self.whose_turn][move] = 1
-        if self.my_final_roll >= self.other_final_roll:
-            self.agent_success[self.whose_turn] += 1
-        else:
-            self.agent_failure[self.whose_turn] += 1
+        num_successes = 0
+        num_failures = 0
+        if len(self.action_log) > 1:
+            num_successes = self.action_log[-1][2]
+            num_failures = self.action_log[-1][3]
 
-        self.move_made = self.game.skills[move]
-
-        self.whose_turn = self.game.agents[(self.game.agents.index(self.whose_turn)+1) % len(self.game.agents)]
-        self.conversation_partner = self.game.agents[(self.game.agents.index(self.conversation_partner)+1) % len(self.game.agents)]
+        if move == 'Apologize':
+            available_moves = self.get_moves()
+            for skill in available_moves:
+                if skill != 'Apologize':
+                    num_failures -= 1
+                    apology_action = (self.whose_turn, move, num_successes, num_failures)
+                    self.action_log.append(apology_action)
+                    used_skill = (self.whose_turn, skill, num_successes, num_failures)
+                    self.action_log.append(used_skill)
         
+        else:
+            my_final_roll = self.game.agent_skills[self.whose_turn][move]
+            other_final_roll = self.game.agent_skills[1-self.whose_turn][move]
+            if my_final_roll >= other_final_roll:
+                num_successes += 1
+            else:
+                num_failures += 1
+            next_action = (self.whose_turn, move, num_successes, num_failures)
+            self.action_log.append(next_action)
+        
+        self.whose_turn = 1 - self.whose_turn
+        
+        print(self.action_log)
         return self
     
     def is_terminal(self):
-        return self.agent_failure[self.game.agents[0]] > 2 or self.agent_success[self.game.agents[0]] > 2 or self.agent_failure[self.game.agents[1]] > 2 or self.agent_success[self.game.agents[1]] > 2
+        num_actions = len(self.action_log)
+        if len(self.action_log) < 2:
+            return False
+        for who, skill, successes, failures in self.action_log:
+            if successes > 2 or failures > 2:
+                return True
+        return False
         
     def get_score(self, agent):
-        return self.agent_success[agent] - self.agent_failure[agent]
+        for who, skill, successes, failures in reversed(self.action_log):
+            if self.game.agents[self.whose_turn] == agent:
+                return successes - failures
+        return 0

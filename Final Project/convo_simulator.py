@@ -28,9 +28,9 @@ for i in range(rounds):
   
   while not state.is_terminal():
     tick = time.time()
-    move = bots[state.whose_turn].think(state.copy())
+    move = bots[state.get_whose_turn()].think(state.copy())
     tock = time.time()
-    #print(state.whose_turn, "thought for", tock-tick, "seconds")
+    print(state.get_whose_turn(), "thought for", tock-tick, "seconds")
     state.apply_move(move)
 
   winner = max(game.agents,key=state.get_score)
