@@ -11,13 +11,16 @@ class Conversation(object):
                         'Insight': 'make an insightful comment to',
                         'Manipulate': 'manipulate',
                         'Cultural Knowledge': 'talk about history with',
+                        'Animal Handling':'talks about their fondness for raising animals with',
                         'Intimidate': 'intimidate',
                         'Sleight of Hand': 'impress',
                         'Apologize': 'apologize to',
                         'Bluff': 'take over the conversation from',
                         'Barter': 'promise a favor to'
                       }
-                      
+        
+        self.encounter_skills = ['Deception', 'Performance', 'Persuasion', 'Insight', 'Manipulate', 'Cultural Knowledge', 'Animal Handling', 'Intimidate', 'Sleight of Hand']
+        
         self.agent_skills = [
                                 {
                                     'Deception': 2,
@@ -60,7 +63,7 @@ class State(object):
         return res
         
     def get_whose_turn(self):
-        return self.game.agents[self.whose_turn]
+        return self.game.agents[self.whose_turn].name
            
     def get_moves(self):
         moves = list(self.game.skills.keys()).copy()
@@ -74,7 +77,7 @@ class State(object):
                     moves.remove(entry[5])
                 elif entry[0] == self.whose_turn and entry[6] in moves:
                     moves.remove(entry[6])
-                
+        
         return moves
         
     def apply_move(self, move):
@@ -99,25 +102,26 @@ class State(object):
         if (move == 'Apologize' or move == 'Bluff' or move == 'Barter') and len(available_moves) > 0:
             worst_option = available_moves[0]
             for skill in available_moves:
-                if skill in self.game.agent_skills[self.whose_turn]:
-                    if self.game.agent_skills[self.whose_turn][skill] < self.game.agent_skills[self.whose_turn][worst_option]:
+                if skill in self.game.encounter_skills:
+                    if self.game.agents[self.whose_turn].skill_bonus(skill) < self.game.agents[self.whose_turn].skill_bonus(worst_option):
                         worst_option = skill
             if move == 'Apologize':
                 num_failures -= 1
                 apoligized_skill = worst_option
             elif move == 'Bluff':
-                bluff_mod = -2
+                bluff_mod = 2
                 bluffed_skill = worst_option
             else:
-                barter_mod = -2
+                barter_mod = 2
                 bartered_skill = worst_option
             next_action = (self.whose_turn, move, num_successes, num_failures, apoligized_skill, bluffed_skill, bartered_skill, bluff_mod, barter_mod)
             self.action_log.append(next_action)
             
         
         else:
-            my_final_roll = self.game.agent_skills[self.whose_turn][move] 
-            other_final_roll = self.game.agent_skills[1-self.whose_turn][move] + bluff_mod + barter_mod
+            my_final_roll = self.game.agents[self.whose_turn].skill_bonus(move) + bluff_mod + barter_mod
+            other_final_roll = self.game.agents[1 - self.whose_turn].skill_bonus(move)
+            
             if my_final_roll >= other_final_roll:
                 num_successes += 1
             else:
@@ -141,6 +145,6 @@ class State(object):
         
     def get_score(self, agent):
         for who, skill, successes, failures, apology, bluffed, bartered, bluff_mod, barter_mod in reversed(self.action_log):
-            if self.game.agents[self.whose_turn] == agent:
+            if self.game.agents[self.whose_turn].name == agent:
                 return successes - failures
         return 0

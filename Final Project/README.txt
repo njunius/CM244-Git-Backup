@@ -8,3 +8,7 @@ py interactive.py [bot1_name] [bot2_name]
 commandline usage for simulator:
 
 py simulator.py [bot1_name] [bot2_name]
+
+commandline usage for conversation:
+
+py convo_simulator.py [bot1_name] [bot2_name]
