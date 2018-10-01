@@ -49,8 +49,7 @@ def dijkstras_shortest_path(src, dst, graph, adj):
 			return path
 			
 		for next in adj(graph, current).items():
-			next_cell = next[0]
-			next_cost = next[1]
+			next_cell, next_cost = next
 			
 			new_cost = cost_so_far[current] + next_cost
 			if next_cell not in cost_so_far or new_cost < cost_so_far[next_cell]:
